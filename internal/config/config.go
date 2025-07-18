@@ -29,7 +29,7 @@ func MustLoadConfig() *Config {
 		// when user gives the argumnest in the CLI take them
 		// flag is used to get them
 
-		flags := flag.String("Config", "", "cli given config path")
+		flags := flag.String("config", "", "cli given config path")
 		flag.Parse()
 		getConfigPath = *flags
 		// returns and address to dereference we use *
