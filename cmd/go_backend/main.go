@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/rahulvarma07/goo_backend/internal/config"
+	students "github.com/rahulvarma07/goo_backend/internal/http/handlers"
 )
 
 func main() {
@@ -25,9 +26,7 @@ func main() {
 	router := http.NewServeMux() // COMPLETED: (Setup router)
 
 	// Testing by writing an handler
-	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Just testing port"))
-	})
+	router.HandleFunc("POST /create-student", students.CreateStudent()) // from package students..
 
 	// setting up server with Addr in config file
 	server := http.Server{
@@ -44,7 +43,7 @@ func main() {
 
 	signal.Notify(channel, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		slog.Info("Server has started %s", cnf.Port)
+		slog.Info("Server has started", slog.String("port number: ", cnf.Port))
 		err := server.ListenAndServe() // server listening
 		if err != nil {
 			log.Fatalf("Error in starting the server %s", err) // if err
