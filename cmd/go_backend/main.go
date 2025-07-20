@@ -1,9 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/rahulvarma07/goo_backend/internal/config"
 )
@@ -30,10 +35,33 @@ func main() {
 		Handler: router,
 	}
 	// COMPLETED: (Seting up server)
-	fmt.Printf("Server has started %s", cnf.Port)
-	err := server.ListenAndServe() // server listening
 
+	// TODO:
+	// shut the server gracefully
+	// by getting the commands from the os
+
+	channel := make(chan os.Signal, 1) // this is to check for signal such as interupt
+
+	signal.Notify(channel, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		slog.Info("Server has started %s", cnf.Port)
+		err := server.ListenAndServe() // server listening
+		if err != nil {
+			log.Fatalf("Error in starting the server %s", err) // if err
+		}
+	}()
+	<-channel
+
+	slog.Info("Shutting down the server")
+
+	// now try to shutdown the server once interupted
+
+	con, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := server.Shutdown(con)
 	if err != nil {
-		log.Fatalf("Error in starting the server %s", err) // if err
+		slog.Error("There is an error in shutting down", slog.String("error", err.Error()))
 	}
+	slog.Info("Server shutdown successfully")
 }
