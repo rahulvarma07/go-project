@@ -3,9 +3,11 @@ package students
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/rahulvarma07/goo_backend/internal/http/models"
 	response "github.com/rahulvarma07/goo_backend/internal/http/utils"
 )
@@ -31,6 +33,9 @@ func CreateStudent() http.HandlerFunc {
 		// according to that return the response
 
 		var studentModel models.Student
+
+		// adding validators
+
 		err := json.NewDecoder(r.Body).Decode(&studentModel)
 
 		if errors.Is(err, io.EOF) {
@@ -39,6 +44,14 @@ func CreateStudent() http.HandlerFunc {
 		}
 		if err != nil {
 			response.WriteResponse(w, http.StatusBadRequest, response.GeneralError(err))
+			return
+		}
+
+		// checking for validations
+		err = validator.New().Struct(studentModel)
+		if err != nil {
+			validationError := err.(validator.ValidationErrors)
+			response.WriteResponse(w, http.StatusBadRequest, response.CheckValidation(validationError))
 			return
 		}
 

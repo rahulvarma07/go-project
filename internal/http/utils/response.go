@@ -2,7 +2,11 @@ package response
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
+
+	"github.com/go-playground/validator/v10"
 )
 
 const (
@@ -41,5 +45,23 @@ func GeneralError(err error) WriteResponseModel {
 	return WriteResponseModel{
 		Status: StatusError,
 		Error:  err.Error(),
+	}
+}
+
+// next step is to work with validators
+func CheckValidation(err validator.ValidationErrors) WriteResponseModel {
+	var validtionFieldErrors []string
+	for _, e := range err {
+		switch e.ActualTag() { // actualTag error gives the actual tag
+		case "required":
+			validtionFieldErrors = append(validtionFieldErrors, fmt.Sprintf("The field %s is required", e.Field()))
+		default:
+			validtionFieldErrors = append(validtionFieldErrors, fmt.Sprintf("The field %s is invalid", e.Field()))
+		}
+	}
+
+	return WriteResponseModel{
+		Status: StatusError,
+		Error:  strings.Join(validtionFieldErrors, ", "),
 	}
 }
